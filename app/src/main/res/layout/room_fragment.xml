@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.example.a87784.select.ui.CustomSeatView
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:id="@+id/customSeatView"
+        android:layout_weight="8"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:id="@+id/showDetail"
+        android:text="showDetail"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:id="@+id/funcBtn">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/determine"
+            android:text="@string/determine"
+            android:layout_marginRight="10dp"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/cancel"
+            android:text="@string/cancel"/>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Select</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_student_id">请输入学号</string>
+    <string name="prompt_password">请输入密码</string>
+    <string name="action_sign_in">登录</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_student_id">This studentId is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="title_activity_room">RoomActivity</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+
+    <string name="non_search">选择楼层和书库，点击搜索，开始预定座位吧！</string>
+    <string name="loading">正在加载，请稍等&#8230;</string>
+
+    <string name="captcha_hint">请输入验证码</string>
+    
+    <string name="determine">确定选座</string>
+    <string name="cancel">结束选座</string>
+</resources>
