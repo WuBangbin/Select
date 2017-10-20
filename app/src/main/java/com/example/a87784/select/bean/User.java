@@ -14,6 +14,7 @@ public class User extends BmobUser{
     private String name;            //姓名
     private String major;           //学院
     private String identity;        //身份
+    private String cookie;          //cookie
 //    private String password;        //密码
 
     private Seat selectedSeat;      //正占用的座位
@@ -75,5 +76,13 @@ public class User extends BmobUser{
 
     public void setSeatRecords(ArrayList<Seat> seatRecords) {
         this.seatRecords = seatRecords;
+    }
+
+    public String getCookie() {
+        return cookie;
+    }
+
+    public void setCookie(String cookie) {
+        this.cookie = cookie;
     }
 }

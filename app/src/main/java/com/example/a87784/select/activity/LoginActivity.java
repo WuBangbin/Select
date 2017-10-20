@@ -1,48 +1,24 @@
 package com.example.a87784.select.activity;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
-import android.content.pm.PackageManager;
+
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
 
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
 
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import com.example.a87784.select.R;
 import com.example.a87784.select.bean.User;
@@ -52,18 +28,12 @@ import org.jsoup.nodes.Document;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Cookie;
-import okhttp3.CookieJar;
 import okhttp3.FormBody;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okio.BufferedSink;
 
-import static android.Manifest.permission.READ_CONTACTS;
 
 
 public class LoginActivity extends AppCompatActivity implements OnClickListener {
@@ -133,6 +103,8 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
                     Toast.makeText(LoginActivity.this,"登录成功",Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "handleMessage: ------------------------7");
                     setInfo();
+                    saveInfo();
+                    enterMainActivity();
                     break;
 
 
@@ -178,10 +150,12 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
                 }
                 Message message = handler.obtainMessage();
                 Log.d(TAG, "run: ------------------------1");
-                if(response != null && response.isSuccessful()) {
+                if(response != null && response.isSuccessful() && !(response.headers("Set-Cookie").isEmpty())) {
                     lastCookie = response.headers("Set-Cookie").get(0).substring(0,response.headers("Set-Cookie").get(0).indexOf(";"));
                     cookie = firstCookie + ";" + lastCookie ;
                     message.what = LOGIN_SUCCESS;
+                }else {
+                    message.what = LOGIN_FAIL;
                 }
                 handler.sendMessage(message);
             }
@@ -269,6 +243,7 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
         user.setName(name);
         user.setIdentity(identify);
         user.setMajor(major);
+        user.setCookie(cookie);
     }
 
     public void initView(){
@@ -304,6 +279,23 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
                 }
                 break;
         }
+    }
+
+
+    /**
+     * 保存信息到本地
+     */
+    public void saveInfo(){
+
+    }
+
+
+    public void enterMainActivity(){
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("user",user);
+        Intent i = new Intent(LoginActivity.this,MainActivity.class);
+        i.putExtra("user",bundle);
+        startActivity(i);
     }
 }
 
