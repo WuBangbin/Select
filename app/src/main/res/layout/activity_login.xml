@@ -30,6 +30,7 @@
                     android:id="@+id/password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:inputType="textPassword"
                     android:hint="@string/prompt_password"
                     android:maxLines="1"/>
 
@@ -41,7 +42,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
                     android:id="@+id/captcha"
-                    android:hint="@string/captcha_hint"/>
+                    android:hint="@string/captcha_hint"
+                    android:maxLines="1"/>
                 <ImageView
                     android:layout_width="150dp"
                     android:layout_height="60dp"

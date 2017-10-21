@@ -2,6 +2,7 @@ package com.example.a87784.select.activity;
 
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -21,7 +22,6 @@ import android.widget.Toast;
 import java.io.IOException;
 
 import com.example.a87784.select.R;
-import com.example.a87784.select.bean.User;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -58,6 +58,9 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
     private String studentId;
     private String password;
     private String captcha;
+    private String name;
+    private String identity;
+    private String major;
 
     private Button signInBtn;
     private ImageView captchaImgView;
@@ -67,14 +70,9 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
     private String lastCookie;
     private String cookie;
 
-
     private String responseTitle;
     private Document doc;
 
-    private User user;
-    private String name;
-    private String identify;
-    private String major;
 
 
 
@@ -102,7 +100,6 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
                 case GET_INFO_SUCCESS:
                     Toast.makeText(LoginActivity.this,"登录成功",Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "handleMessage: ------------------------7");
-                    setInfo();
                     saveInfo();
                     enterMainActivity();
                     break;
@@ -226,8 +223,8 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
                 Message message = handler.obtainMessage();
                 Log.d(TAG, "run: -----------------------------------4");
                 if("欢迎访问信息门户".equals(responseTitle)){
-                    name = doc.select("div.composer ul li").get(0).text().split(",")[0];
-                    identify = doc.select("div.composer ul li").select("span").text();
+                    name = doc.select("div.composer ul li").get(0).text().split("，")[0];
+                    identity = doc.select("div.composer ul li").select("span").text();
                     major = doc.select("div.composer ul li").get(4).text().split("：")[1];
                     message.what = GET_INFO_SUCCESS;
                 }else {
@@ -238,13 +235,6 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
         }).start();
     }
 
-    public void setInfo(){
-        user = new User(studentId,password);
-        user.setName(name);
-        user.setIdentity(identify);
-        user.setMajor(major);
-        user.setCookie(cookie);
-    }
 
     public void initView(){
         studentIdEdit = (EditText) findViewById(R.id.studentId);
@@ -286,16 +276,22 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
      * 保存信息到本地
      */
     public void saveInfo(){
-
+        SharedPreferences.Editor editor = getSharedPreferences("data",MODE_PRIVATE).edit();
+        editor.putString("cookie",cookie);
+        editor.putString("studentId",studentId);
+        editor.putString("password",password);
+        editor.putString("name",name);
+        editor.putString("identity",identity);
+        editor.putString("major",major);
+        editor.apply();
     }
 
 
+
     public void enterMainActivity(){
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("user",user);
         Intent i = new Intent(LoginActivity.this,MainActivity.class);
-        i.putExtra("user",bundle);
         startActivity(i);
+        this.finish();
     }
 }
 

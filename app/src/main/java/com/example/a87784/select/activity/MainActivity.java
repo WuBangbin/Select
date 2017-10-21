@@ -1,5 +1,6 @@
 package com.example.a87784.select.activity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
@@ -16,7 +17,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,8 +25,6 @@ import com.example.a87784.select.R;
 import com.example.a87784.select.bean.Room;
 import com.example.a87784.select.bean.User;
 import com.example.a87784.select.fragment.RoomFragment;
-
-import org.w3c.dom.Text;
 
 import java.util.HashMap;
 
@@ -40,7 +38,7 @@ import static com.example.a87784.select.config.Constans.APPLICATION_ID;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    public  User testUser;
+    public  User user;
     private static final String TAG = "MainActivity";
 
 
@@ -50,6 +48,14 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout drawer;
     private NavigationView navigationView;
     private ActionBarDrawerToggle toggle;
+    private TextView nameView;
+    private TextView majorView;
+    private String name;
+    private String major;
+    private String studentId;
+    private String password;
+    private String identity;
+    private String cookie;
 
     private int selectedFloor,selectedRoom;
 
@@ -81,15 +87,24 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         initData();
+        if(initInfo()){
+            setInfo();
+            register();
+        }
 
-   //     Bmob.initialize(this,APPLICATION_ID);   //初始化Bmob SDK
 
-  //      test();
     }
 
-    public void test(){
-        testUser = new User("20162201","123456");
-        testUser.signUp(this, new SaveListener() {
+    /**
+     * 注册信息
+     */
+    public void register(){
+        user = new User(studentId,password);
+        user.setMajor(major);
+        user.setIdentity(identity);
+        user.setName(name);
+        user.setCookie(cookie);
+        user.signUp(this, new SaveListener() {
             @Override
             public void onSuccess() {
                 Log.d(TAG, "done: -------------------注册成功");
@@ -108,6 +123,7 @@ public class MainActivity extends AppCompatActivity
     public void initView(){
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         navigationView = (NavigationView) findViewById(R.id.nav_view);
+
         floorSpinner = (Spinner)findViewById(R.id.floor);
         roomSpinner = (Spinner)findViewById(R.id.room);
         search = (ImageButton)findViewById(R.id.search);
@@ -136,6 +152,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void initData(){
+
+        Bmob.initialize(this,APPLICATION_ID);   //初始化Bmob SDK
 
         setFloorSpinner();
         setRoomSpinner();
@@ -190,7 +208,9 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-
+    /**
+     * 切换书库视图
+     */
     public void switchFragment(){
         RoomFragment to = matchFragment();
 
@@ -205,6 +225,11 @@ public class MainActivity extends AppCompatActivity
         from = to;
     }
 
+
+    /**
+     * 匹配视图
+     * @return
+     */
     public RoomFragment matchFragment() {
         String key = String.valueOf(selectedFloor) + String.valueOf(selectedRoom);
         return roomHashMap.get(key).getRoomView();
@@ -270,4 +295,31 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    /**
+     * 初始化数据
+     * @return
+     */
+    public boolean initInfo(){
+        SharedPreferences sharedPreferences = getSharedPreferences("data",MODE_PRIVATE);
+        if(!(sharedPreferences.getString("name","").isEmpty())){
+            name = sharedPreferences.getString("name","");
+            studentId = sharedPreferences.getString("studentId","");
+            password = sharedPreferences.getString("password","");
+            major = sharedPreferences.getString("major","");
+            identity = sharedPreferences.getString("identity","");
+            cookie = sharedPreferences.getString("cookie","");
+            return true;
+        }
+        return false;
+    }
+
+
+    public void setInfo(){
+        View headerView = navigationView.getHeaderView(0);
+        nameView = (TextView)headerView.findViewById(R.id.name);
+        majorView = (TextView)headerView.findViewById(R.id.major);
+
+        nameView.setText(name);
+        majorView.setText(major);
+    }
 }
