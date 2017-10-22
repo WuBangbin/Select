@@ -26,7 +26,7 @@
     <string name="loading">正在加载，请稍等&#8230;</string>
 
     <string name="captcha_hint">请输入验证码</string>
-    
+
     <string name="determine">确定选座</string>
     <string name="cancel">结束选座</string>
 </resources>
