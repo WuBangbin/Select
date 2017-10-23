@@ -4,6 +4,8 @@ import android.support.v4.app.Fragment;
 
 import com.example.a87784.select.fragment.RoomFragment;
 
+import java.util.ArrayList;
+
 /**
  * Created by 87784 on 2017/10/13.
  */
@@ -13,6 +15,7 @@ public class Room {
     private int floorNumber;
     private int roomNumber;
     private RoomFragment roomView;
+    private int[][] roomTypeLists;
 
     public Room(int floorNumber,int roomNumber,RoomFragment roomView) {
         this.floorNumber = floorNumber;
@@ -44,5 +47,11 @@ public class Room {
         this.roomView = roomView;
     }
 
+    public int[][] getRoomTypeLists() {
+        return roomTypeLists;
+    }
 
+    public void setRoomTypeLists(int[][] roomTypeLists) {
+        this.roomTypeLists = roomTypeLists;
+    }
 }

@@ -3,6 +3,8 @@ package com.example.a87784.select.activity;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -29,8 +31,11 @@ import com.example.a87784.select.bean.User;
 import com.example.a87784.select.fragment.RoomFragment;
 
 import java.util.HashMap;
+import java.util.List;
 
 import cn.bmob.v3.Bmob;
+import cn.bmob.v3.BmobQuery;
+import cn.bmob.v3.listener.FindListener;
 import cn.bmob.v3.listener.SaveListener;
 
 import static com.example.a87784.select.config.Constans.APPLICATION_ID;
@@ -42,6 +47,8 @@ public class MainActivity extends AppCompatActivity
 
     public  User user;
     private static final String TAG = "MainActivity";
+
+    private static final int QUERY_USER_FINISHED = 1;
 
 
     private Spinner floorSpinner,roomSpinner;
@@ -70,6 +77,21 @@ public class MainActivity extends AppCompatActivity
     private TextView noSearch,loading;
     private FrameLayout roomViewContainer;
 
+    private boolean isRegistered;
+
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch(msg.what){
+                case QUERY_USER_FINISHED:
+                    if(!isRegistered){
+                        register();
+                    }
+                    break;
+            }
+        }
+    };
+
 
 
 
@@ -89,11 +111,13 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         initData();
+
+
         if(initInfo()){
             setInfo();
-            register();
+            //查询用户是否已注册
+            queryIsRegistered(studentId);
         }
-
 
     }
 
@@ -118,9 +142,39 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-
-
     }
+
+
+    /**
+     *查询用户是否已注册
+     */
+    public boolean queryIsRegistered(String studentId){
+        isRegistered = false;
+        BmobQuery<User> query = new BmobQuery<>();
+        query.addWhereEqualTo("username",studentId);
+        Log.d(TAG, "queryIsRegistered: --------------------------------1");
+        query.findObjects(this, new FindListener<User>() {
+            @Override
+            public void onSuccess(List<User> list) {
+                if(list.size() > 0){
+                    isRegistered = true;
+                    Message message = handler.obtainMessage();
+                    message.what = QUERY_USER_FINISHED;
+                    Log.d(TAG, "onSuccess: ---------------------list" + list);
+                }
+            }
+
+            @Override
+            public void onError(int i, String s) {
+                Log.d(TAG, "onError: ------------------" + s);
+
+            }
+        });
+        return isRegistered;
+    }
+
+
+
 
     public void initView(){
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -346,4 +400,5 @@ public class MainActivity extends AppCompatActivity
         nameView.setText(name);
         majorView.setText(major);
     }
+
 }

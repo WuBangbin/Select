@@ -16,8 +16,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.a87784.select.R;
+import com.example.a87784.select.bean.RoomType;
 import com.example.a87784.select.ui.CustomSeatView;
 import com.example.a87784.select.ui.SeatView;
+
+import cn.bmob.v3.listener.SaveListener;
 
 /**
  * Created by 87784 on 2017/10/13.
@@ -111,7 +114,7 @@ public class RoomFragment extends Fragment {
     }
 
 
-    public void popCancelDialog(){
+    public void popCancelDialog() {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(getContext());
         dialog.setMessage("是否取消选座？");
         dialog.setTitle("提示");
