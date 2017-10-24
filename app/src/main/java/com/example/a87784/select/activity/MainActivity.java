@@ -77,7 +77,15 @@ public class MainActivity extends AppCompatActivity
     private TextView noSearch,loading;
     private FrameLayout roomViewContainer;
 
+    //用户是否已注册
     private boolean isRegistered;
+    //书库编号
+    private String key;
+    //传递书库编号的bundle
+    private Bundle bundle;
+
+
+
 
     private Handler handler = new Handler(){
         @Override
@@ -265,10 +273,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * 切换书库视图
+     * 切换书库视图 这里不能用hide show 必须重新加载视图
      */
     public void switchFragment(){
-        RoomFragment to = matchFragment();
+        RoomFragment to = matchFragment(selectedFloor,selectedRoom);
+
+        bundle.putString("roomId",key);
+        to.setArguments(bundle);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         if(from == null){
@@ -284,10 +295,12 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * 匹配视图
+     * @param selectedFloor
+     * @param selectedRoom
      * @return
      */
-    public RoomFragment matchFragment() {
-        String key = String.valueOf(selectedFloor) + String.valueOf(selectedRoom);
+    public RoomFragment matchFragment(int selectedFloor,int selectedRoom) {
+        key = String.valueOf(selectedFloor) + String.valueOf(selectedRoom);
         return roomHashMap.get(key).getRoomView();
     }
 

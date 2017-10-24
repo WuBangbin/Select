@@ -2,17 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <com.example.a87784.select.ui.CustomSeatView
+    <GridView
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:id="@+id/customSeatView"
-        android:layout_weight="8"/>
+        android:id="@+id/gridSeatView"
+        android:layout_weight="8"
+        android:numColumns="8"/>
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:gravity="center"
         android:id="@+id/showDetail"
-        android:text="showDetail"/>
+        android:text="showDetail"
+        android:layout_weight="1"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -25,11 +27,13 @@
             android:layout_height="wrap_content"
             android:id="@+id/determine"
             android:text="@string/determine"
-            android:layout_marginRight="10dp"/>
+            android:layout_marginRight="10dp"
+            android:layout_gravity="top"/>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/cancel"
-            android:text="@string/cancel"/>
+            android:text="@string/cancel"
+            android:layout_gravity="top"/>
     </LinearLayout>
 </LinearLayout>
