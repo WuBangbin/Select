@@ -6,21 +6,33 @@ import com.example.a87784.select.fragment.RoomFragment;
 
 import java.util.ArrayList;
 
+import cn.bmob.v3.BmobObject;
+
 /**
  * Created by 87784 on 2017/10/13.
  */
 
-public class Room {
+public class Room extends BmobObject{
 
     private int floorNumber;
     private int roomNumber;
-    private RoomFragment roomView;
-    private int[][] roomTypeLists;
+    private int[] roomTypeLists;
+    private String[] seatOwnerLists;
+    private RoomFragment roomFragment;
 
-    public Room(int floorNumber,int roomNumber,RoomFragment roomView) {
+    public Room(int floorNumber,int roomNumber){
         this.floorNumber = floorNumber;
         this.roomNumber = roomNumber;
-        this.roomView = roomView;
+        roomTypeLists = new int[80];
+        seatOwnerLists = new String[80];
+    }
+
+    public Room(int floorNumber,int roomNumber,RoomFragment roomFragment) {
+        this.floorNumber = floorNumber;
+        this.roomNumber = roomNumber;
+        this.roomFragment = roomFragment;
+        roomTypeLists = new int[80];
+        seatOwnerLists = new String[80];
     }
 
     public int getFloorNumber() {
@@ -39,19 +51,32 @@ public class Room {
         this.roomNumber = roomNumber;
     }
 
-    public RoomFragment getRoomView() {
-        return roomView;
-    }
-
-    public void setRoomView(RoomFragment roomView) {
-        this.roomView = roomView;
-    }
-
-    public int[][] getRoomTypeLists() {
+    public int[] getRoomTypeLists() {
         return roomTypeLists;
     }
 
-    public void setRoomTypeLists(int[][] roomTypeLists) {
+    public void setRoomTypeLists(int[] roomTypeLists) {
         this.roomTypeLists = roomTypeLists;
+    }
+
+    public String[] getSeatOwnerLists() {
+        return seatOwnerLists;
+    }
+
+    public void setSeatOwnerLists(String[] seatOwnerLists) {
+        this.seatOwnerLists = seatOwnerLists;
+    }
+
+    public RoomFragment getRoomFragment() {
+        return roomFragment;
+    }
+
+    public void setRoomFragment(RoomFragment roomFragment) {
+        this.roomFragment = roomFragment;
+    }
+
+    @Override
+    public String toString() {
+        return floorNumber + "楼第" + roomNumber + "书库";
     }
 }

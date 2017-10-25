@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.example.a87784.select.R;
 import com.example.a87784.select.bean.Room;
 import com.example.a87784.select.bean.User;
+import com.example.a87784.select.config.Constans;
 import com.example.a87784.select.fragment.RoomFragment;
 
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.List;
 import cn.bmob.v3.Bmob;
 import cn.bmob.v3.BmobQuery;
 import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.GetListener;
 import cn.bmob.v3.listener.SaveListener;
 
 import static com.example.a87784.select.config.Constans.APPLICATION_ID;
@@ -48,7 +50,12 @@ public class MainActivity extends AppCompatActivity
     public  User user;
     private static final String TAG = "MainActivity";
 
-    private static final int QUERY_USER_FINISHED = 1;
+    private static final int QUERY_USER_FINISHED = 1;           //查询用户结束
+    private static final int GET_ROOMINFO_OK = 0;          //成功获得指定书库信息
+
+    private static final int NO_PEOPLE = 0;         //座位无人
+    private static final int HAVE_PEOPLE = 1;       //座位有人
+    private static final int SELECTED = 2;          //座位被选中
 
 
     private Spinner floorSpinner,roomSpinner;
@@ -66,13 +73,13 @@ public class MainActivity extends AppCompatActivity
     private String identity;
     private String cookie;
 
+    //点击的楼层和书库编号
     private int selectedFloor,selectedRoom;
 
     private ImageButton search;
 
     private HashMap<String,Room> roomHashMap;
 
-    private RoomFragment from = null;      //正在跳转的视图
 
     private TextView noSearch,loading;
     private FrameLayout roomViewContainer;
@@ -81,8 +88,21 @@ public class MainActivity extends AppCompatActivity
     private boolean isRegistered;
     //书库编号
     private String key;
+    private String roomId;
     //传递书库编号的bundle
     private Bundle bundle;
+    //座位图表(80)
+    private int[] seatImgLists;
+    //座位编号信息
+    private String[] seatTipLists;
+
+
+
+
+
+
+
+    private Room room;
 
 
 
@@ -95,6 +115,12 @@ public class MainActivity extends AppCompatActivity
                     if(!isRegistered){
                         register();
                     }
+                    break;
+                case GET_ROOMINFO_OK:
+                    seatImgLists = getSeatImgLists((int[]) msg.obj);
+                    loading.setVisibility(View.GONE);
+                    roomViewContainer.setVisibility(View.VISIBLE);
+                    switchFragment(seatImgLists,seatTipLists);
                     break;
             }
         }
@@ -126,6 +152,27 @@ public class MainActivity extends AppCompatActivity
             //查询用户是否已注册
             queryIsRegistered(studentId);
         }
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                room = new Room(0,0,new RoomFragment());
+                room.save(MainActivity.this, new SaveListener() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "onSuccess: ---------------1");
+                    }
+
+                    @Override
+                    public void onFailure(int i, String s) {
+
+                    }
+                });
+
+            }
+        }).start();
 
     }
 
@@ -207,8 +254,17 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 Toast.makeText(MainActivity.this,"search " + selectedFloor + "楼" + selectedRoom + "书库的座位表",Toast.LENGTH_SHORT).show();
                 noSearch.setVisibility(View.GONE);
-                roomViewContainer.setVisibility(View.VISIBLE);
-                switchFragment();
+
+
+                //正在请求数据，显示数据正在加载
+                loading.setVisibility(View.VISIBLE);
+
+
+                //请求点击书库的信息
+                key = String.valueOf(selectedFloor) + String.valueOf(selectedRoom);
+                roomId = matchRoomTypeId(key);
+                getRoomSeatTypeLists(roomId);
+
             }
         });
 
@@ -224,15 +280,8 @@ public class MainActivity extends AppCompatActivity
 
         selectedFloor = selectedRoom = 0;
         roomHashMap = new HashMap<>();
-        Room room;
 
-        //
-        for(int i=0;i<5;i++)
-            for(int j=0;j<4;j++){
-                String key = String.valueOf(i) + String.valueOf(j);
-                room = new Room(i,j,new RoomFragment());
-                roomHashMap.put(key,room);
-            }
+        seatTipLists = getSeatTipLists();
 
 
     }
@@ -245,6 +294,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 selectedFloor = i;
+                Log.d(TAG, "onItemSelected: ----------------floor" + i);
             }
 
             @Override
@@ -263,6 +313,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 selectedRoom = i;
+                Log.d(TAG, "onItemSelected: -------------------------room" + i);
             }
 
             @Override
@@ -273,23 +324,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * 切换书库视图 这里不能用hide show 必须重新加载视图
+     * 切换书库视图 这里不能用hide show 必须重新replace视图
      */
-    public void switchFragment(){
+    public void switchFragment(int[] seatImgLists,String[] seatTipLists){
         RoomFragment to = matchFragment(selectedFloor,selectedRoom);
 
-        bundle.putString("roomId",key);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("seatImgLists",seatImgLists);
+        bundle.putSerializable("seatTipLists",seatTipLists);
         to.setArguments(bundle);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        if(from == null){
-            fragmentTransaction.add(R.id.roomViewContainer,to).commit();
-        } else if(to.isAdded()){
-            fragmentTransaction.hide(from).show(to).commit();
-        }else {
-            fragmentTransaction.hide(from).add(R.id.roomViewContainer,to).commit();
-        }
-        from = to;
+        fragmentTransaction.add(R.id.roomViewContainer,to).commit();
     }
 
 
@@ -301,7 +347,13 @@ public class MainActivity extends AppCompatActivity
      */
     public RoomFragment matchFragment(int selectedFloor,int selectedRoom) {
         key = String.valueOf(selectedFloor) + String.valueOf(selectedRoom);
-        return roomHashMap.get(key).getRoomView();
+        if(roomHashMap.containsKey(key)){
+            return roomHashMap.get(key).getRoomFragment();
+        }else {
+            room = new Room(selectedFloor,selectedRoom,new RoomFragment());
+            roomHashMap.put(key,room);
+            return room.getRoomFragment();
+        }
     }
 
 
@@ -412,6 +464,138 @@ public class MainActivity extends AppCompatActivity
 
         nameView.setText(name);
         majorView.setText(major);
+    }
+
+
+
+
+    /**
+     *
+     * @param room 书库的楼层和编号结合的字符串
+     * @return
+     */
+    public String matchRoomTypeId(String room){
+        switch (room){
+            case "00":return Constans.ONE_ONE_ROOM_OBJECTID;
+            case "01":return Constans.ONE_TWO_ROOM_OBJECTID;
+            case "02":return Constans.ONE_THREE_ROOM_OBJECTID;
+            case "03":return Constans.ONE_FOUR_ROOM_OBJECTID;
+
+            case "10":return Constans.TWO_ONE_ROOM_OBJECTID;
+            case "11":return Constans.TWO_TWO_ROOM_OBJECTID;
+            case "12":return Constans.TWO_THREE_ROOM_OBJECTID;
+            case "13":return Constans.TWO_FOUR_ROOM_OBJECTID;
+
+            case "20":return Constans.THREE_ONE_ROOM_OBJECTID;
+            case "21":return Constans.THREE_TWO_ROOM_OBJECTID;
+            case "22":return Constans.THREE_THREE_ROOM_OBJECTID;
+            case "23":return Constans.THREE_FOUR_ROOM_OBJECTID;
+
+            case "30":return Constans.FOUR_ONE_ROOM_OBJECTID;
+            case "31":return Constans.FOUR_TWO_ROOM_OBJECTID;
+            case "32":return Constans.FOUR_THREE_ROOM_OBJECTID;
+            case "33":return Constans.FOUR_FOUR_ROOM_OBJECTID;
+
+            case "40":return Constans.FIVE_ONE_ROOM_OBJECTID;
+            case "41":return Constans.FIVE_TWO_ROOM_OBJECTID;
+            case "42":return Constans.FIVE_THREE_ROOM_OBJECTID;
+            case "43":return Constans.FIVE_FOUR_ROOM_OBJECTID;
+        }
+        return null;
+    }
+
+
+
+
+    /**
+     * 从bmob上获得座位type表
+     * @param roomId
+     */
+    public void getRoomSeatTypeLists(String roomId){
+        BmobQuery<Room> query = new BmobQuery<>();
+        query.getObject(MainActivity.this, roomId, new GetListener<Room>() {
+            @Override
+            public void onSuccess(Room room) {
+                Message message = handler.obtainMessage();
+                message.what = GET_ROOMINFO_OK;
+                message.obj = room.getRoomTypeLists();
+                handler.sendMessage(message);
+            }
+
+            @Override
+            public void onFailure(int i, String s) {
+
+            }
+        });
+    }
+
+
+
+
+
+    /**
+     * 获得座位图id
+     * @param seatType
+     * @return
+     */
+    public int getSeatResId(int seatType){
+        switch (seatType){
+            case NO_PEOPLE:
+                return R.drawable.seat_noselected;
+            case HAVE_PEOPLE:
+                return R.drawable.seat_selected;
+            case SELECTED:
+                return R.drawable.seat_selcting;
+        }
+        return 0;
+    }
+
+
+    /**
+     * 获得座位图list
+     * @param seatTypeLists
+     * @return
+     */
+    public int[]  getSeatImgLists(int[] seatTypeLists){
+        int[] seatImgLists = new int[80];
+        for(int i =0;i<80;i++){
+            seatImgLists[i] = getSeatResId(seatTypeLists[i]);
+        }
+        return seatImgLists;
+    }
+
+
+    public String[] getSeatTipLists(){
+        int i=0,raw,col;
+        for(raw=0;raw<10;raw++){
+            for(col=0;col<8;col++,i++){
+                seatTipLists[i] = "(" + raw + "," + col + ")";
+            }
+        }
+        return seatTipLists;
+    }
+
+
+    /**
+     * 初始化表 待删
+     */
+    public void init(){
+        for(int i=0;i<5;i++){
+            for(int j=0;j<4;j++){
+                Room room = new Room(i,j);
+                room.save(this, new SaveListener() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "onSuccess: -----------------------init  1");
+                    }
+
+                    @Override
+                    public void onFailure(int i, String s) {
+
+                    }
+                });
+            }
+        }
     }
 
 }
