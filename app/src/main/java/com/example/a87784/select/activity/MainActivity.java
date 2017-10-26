@@ -95,17 +95,8 @@ public class MainActivity extends AppCompatActivity
     private int[] seatImgLists;
     //座位编号信息
     private String[] seatTipLists;
-
-
-
-
-
-
-
-    private Room room;
-
-
-
+    //书库fragment表
+    private HashMap<String,RoomFragment> roomFragmentHashMap;
 
     private Handler handler = new Handler(){
         @Override
@@ -117,7 +108,7 @@ public class MainActivity extends AppCompatActivity
                     }
                     break;
                 case GET_ROOMINFO_OK:
-                    seatImgLists = getSeatImgLists((int[]) msg.obj);
+                    seatImgLists = getSeatImgLists((Object[]) msg.obj);
                     loading.setVisibility(View.GONE);
                     roomViewContainer.setVisibility(View.VISIBLE);
                     switchFragment(seatImgLists,seatTipLists);
@@ -153,26 +144,6 @@ public class MainActivity extends AppCompatActivity
             queryIsRegistered(studentId);
         }
 
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                room = new Room(0,0,new RoomFragment());
-                room.save(MainActivity.this, new SaveListener() {
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, "onSuccess: ---------------1");
-                    }
-
-                    @Override
-                    public void onFailure(int i, String s) {
-
-                    }
-                });
-
-            }
-        }).start();
 
     }
 
@@ -348,11 +319,12 @@ public class MainActivity extends AppCompatActivity
     public RoomFragment matchFragment(int selectedFloor,int selectedRoom) {
         key = String.valueOf(selectedFloor) + String.valueOf(selectedRoom);
         if(roomHashMap.containsKey(key)){
-            return roomHashMap.get(key).getRoomFragment();
+            return roomFragmentHashMap.get(key);
         }else {
-            room = new Room(selectedFloor,selectedRoom,new RoomFragment());
+            Room room = new Room(selectedFloor,selectedRoom);
+            roomFragmentHashMap.put(key,new RoomFragment());
             roomHashMap.put(key,room);
-            return room.getRoomFragment();
+            return roomFragmentHashMap.get(key);
         }
     }
 
@@ -504,13 +476,16 @@ public class MainActivity extends AppCompatActivity
         return null;
     }
 
+/*
 
 
 
-    /**
+    */
+/**
      * 从bmob上获得座位type表
      * @param roomId
      */
+
     public void getRoomSeatTypeLists(String roomId){
         BmobQuery<Room> query = new BmobQuery<>();
         query.getObject(MainActivity.this, roomId, new GetListener<Room>() {
@@ -538,14 +513,13 @@ public class MainActivity extends AppCompatActivity
      * @param seatType
      * @return
      */
-    public int getSeatResId(int seatType){
-        switch (seatType){
-            case NO_PEOPLE:
-                return R.drawable.seat_noselected;
-            case HAVE_PEOPLE:
-                return R.drawable.seat_selected;
-            case SELECTED:
-                return R.drawable.seat_selcting;
+    public int getSeatResId(Object seatType){
+        if(seatType == null || seatType == NO_PEOPLE){
+            return R.drawable.seat_noselected;
+        }else if(seatType == HAVE_PEOPLE) {
+            return R.drawable.seat_selected;
+        }else if(seatType == SELECTED) {
+            return R.drawable.seat_selcting;
         }
         return 0;
     }
@@ -556,7 +530,7 @@ public class MainActivity extends AppCompatActivity
      * @param seatTypeLists
      * @return
      */
-    public int[]  getSeatImgLists(int[] seatTypeLists){
+    public int[]  getSeatImgLists(Object[] seatTypeLists){
         int[] seatImgLists = new int[80];
         for(int i =0;i<80;i++){
             seatImgLists[i] = getSeatResId(seatTypeLists[i]);
@@ -566,36 +540,17 @@ public class MainActivity extends AppCompatActivity
 
 
     public String[] getSeatTipLists(){
+        String[] seatTipLists = new String[80];
         int i=0,raw,col;
         for(raw=0;raw<10;raw++){
-            for(col=0;col<8;col++,i++){
+            for(col=0;col<8;col++){
                 seatTipLists[i] = "(" + raw + "," + col + ")";
+                i++;
             }
         }
         return seatTipLists;
     }
 
 
-    /**
-     * 初始化表 待删
-     */
-    public void init(){
-        for(int i=0;i<5;i++){
-            for(int j=0;j<4;j++){
-                Room room = new Room(i,j);
-                room.save(this, new SaveListener() {
-                    @Override
-                    public void onSuccess() {
-                        Log.d(TAG, "onSuccess: -----------------------init  1");
-                    }
-
-                    @Override
-                    public void onFailure(int i, String s) {
-
-                    }
-                });
-            }
-        }
-    }
 
 }

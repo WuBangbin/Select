@@ -14,26 +14,18 @@ import cn.bmob.v3.BmobObject;
 
 public class Room extends BmobObject{
 
-    private int floorNumber;
-    private int roomNumber;
-    private int[] roomTypeLists;
+    private Integer floorNumber;
+    private Integer roomNumber;
+    private Integer[] roomTypeLists;
     private String[] seatOwnerLists;
-    private RoomFragment roomFragment;
 
-    public Room(int floorNumber,int roomNumber){
+    public Room(Integer floorNumber,Integer roomNumber){
         this.floorNumber = floorNumber;
         this.roomNumber = roomNumber;
-        roomTypeLists = new int[80];
+        roomTypeLists = new Integer[80];
         seatOwnerLists = new String[80];
     }
 
-    public Room(int floorNumber,int roomNumber,RoomFragment roomFragment) {
-        this.floorNumber = floorNumber;
-        this.roomNumber = roomNumber;
-        this.roomFragment = roomFragment;
-        roomTypeLists = new int[80];
-        seatOwnerLists = new String[80];
-    }
 
     public int getFloorNumber() {
         return floorNumber;
@@ -51,11 +43,11 @@ public class Room extends BmobObject{
         this.roomNumber = roomNumber;
     }
 
-    public int[] getRoomTypeLists() {
+    public Integer[] getRoomTypeLists() {
         return roomTypeLists;
     }
 
-    public void setRoomTypeLists(int[] roomTypeLists) {
+    public void setRoomTypeLists(Integer[] roomTypeLists) {
         this.roomTypeLists = roomTypeLists;
     }
 
@@ -65,14 +57,6 @@ public class Room extends BmobObject{
 
     public void setSeatOwnerLists(String[] seatOwnerLists) {
         this.seatOwnerLists = seatOwnerLists;
-    }
-
-    public RoomFragment getRoomFragment() {
-        return roomFragment;
-    }
-
-    public void setRoomFragment(RoomFragment roomFragment) {
-        this.roomFragment = roomFragment;
     }
 
     @Override
