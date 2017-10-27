@@ -7,13 +7,16 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.a87784.select.R;
 import com.example.a87784.select.bean.Room;
@@ -104,6 +107,12 @@ public class RoomFragment extends Fragment {
         seatItemList = new ArrayList<>();
         seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
         gridView.setAdapter(seatItemAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                CheckSeatState(i);
+            }
+        });
 
         return view;
     }
@@ -168,7 +177,21 @@ public class RoomFragment extends Fragment {
         dialog.create().show();
     }
 
-
+    /**
+     * 检查座位状态
+     * @param clickItem
+     */
+    public void CheckSeatState(int clickItem){
+        Log.d(TAG, "CheckSeatState: -------------------clickItem " + clickItem);
+        int clickSeatImg = seatImgLists[clickItem];
+        if(clickSeatImg == R.drawable.seat_noselected){
+            Toast.makeText(getContext(),"选座：" + clickItem , Toast.LENGTH_SHORT).show();
+        }else if(clickSeatImg == R.drawable.seat_selected){
+            Toast.makeText(getContext(),"抱歉，此座已有人" , Toast.LENGTH_SHORT).show();
+        }else if(clickSeatImg == R.drawable.seat_selcting){
+            Toast.makeText(getContext(),"取消选座" , Toast.LENGTH_SHORT).show();
+        }
+    }
 
 
 

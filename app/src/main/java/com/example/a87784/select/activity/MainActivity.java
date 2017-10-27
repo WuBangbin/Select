@@ -53,9 +53,9 @@ public class MainActivity extends AppCompatActivity
     private static final int QUERY_USER_FINISHED = 1;           //查询用户结束
     private static final int GET_ROOMINFO_OK = 0;          //成功获得指定书库信息
 
-    private static final int NO_PEOPLE = 0;         //座位无人
-    private static final int HAVE_PEOPLE = 1;       //座位有人
-    private static final int SELECTED = 2;          //座位被选中
+    public static final int NO_PEOPLE = 0;         //座位无人
+    public static final int HAVE_PEOPLE = 1;       //座位有人
+    public static final int SELECTED = 2;          //座位被选中
 
 
     private Spinner floorSpinner,roomSpinner;
@@ -251,6 +251,7 @@ public class MainActivity extends AppCompatActivity
 
         selectedFloor = selectedRoom = 0;
         roomHashMap = new HashMap<>();
+        roomFragmentHashMap = new HashMap<>();
 
         seatTipLists = getSeatTipLists();
 
@@ -514,11 +515,11 @@ public class MainActivity extends AppCompatActivity
      * @return
      */
     public int getSeatResId(Object seatType){
-        if(seatType == null || seatType == NO_PEOPLE){
+        if(seatType == null || (int)seatType == NO_PEOPLE){
             return R.drawable.seat_noselected;
-        }else if(seatType == HAVE_PEOPLE) {
+        }else if((int)seatType == HAVE_PEOPLE) {
             return R.drawable.seat_selected;
-        }else if(seatType == SELECTED) {
+        }else if((int)seatType == SELECTED) {
             return R.drawable.seat_selcting;
         }
         return 0;

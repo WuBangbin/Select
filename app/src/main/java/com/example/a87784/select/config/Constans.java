@@ -6,10 +6,11 @@ package com.example.a87784.select.config;
 
 public class Constans {
 
+    /*bmob application id*/
     public static final String APPLICATION_ID= "2bf3ccc29d3f86950ec3acf9397f46d2";
 
 
-
+    /*书库对应bmob表id*/
     public static final String ONE_ONE_ROOM_OBJECTID = "cb502435ee";
     public static final String ONE_TWO_ROOM_OBJECTID = "3743940ffb";
     public static final String ONE_THREE_ROOM_OBJECTID = "7c06966cc5";
@@ -34,6 +35,7 @@ public class Constans {
     public static final String FIVE_TWO_ROOM_OBJECTID = "749a18bc2b";
     public static final String FIVE_THREE_ROOM_OBJECTID = "5a625f7f03";
     public static final String FIVE_FOUR_ROOM_OBJECTID = "ebcfdc10dc";
+
 
 
 
