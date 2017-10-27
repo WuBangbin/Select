@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.example.a87784.select.R;
 import com.example.a87784.select.bean.Room;
+import com.example.a87784.select.bean.User;
 import com.example.a87784.select.config.Constans;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.Map;
 
 import cn.bmob.v3.BmobQuery;
 import cn.bmob.v3.listener.GetListener;
+import cn.bmob.v3.listener.UpdateListener;
 
 /**
  * Created by 87784 on 2017/10/13.
@@ -40,6 +42,10 @@ public class RoomFragment extends Fragment {
     private static final String TAG = "RoomFragment";
 
 
+    private static final int DETERMINE_SEAT = 0;            //确定选座
+    private static final int CANCLE_SEAT = 1;               //取消选座
+
+
     private View view;
 
     private GridView gridView;
@@ -47,17 +53,25 @@ public class RoomFragment extends Fragment {
     private Button determine;
     private Button cancel;
 
+    //room对应的Bmob表id
+    private String roomObjectId;
     //room的楼层和编号
-    private String roomId;
-    //该书库的座位类型表(80)
-    private int[] seatTypeLists;
-    //座位图表
+    private int roomNumber;
+    private int floorNumber;
+    //座位图表(80)
     private int[] seatImgLists;
     //座位编号信息
     private String[] seatTipLists;
 
     private ArrayList<Map<String,Object>> seatItemList;
     private SimpleAdapter seatItemAdapter;
+
+    private Integer lastClickItem;      //上一个点击的座位编号
+    private Integer nowClickItem;       //正点击的座位编号
+    private Integer selectedSeat;           //已选择的座位
+
+    //用户id
+    private String userObjectId;
 
 
 
@@ -70,8 +84,10 @@ public class RoomFragment extends Fragment {
         //获得要显示的书库信息
         seatImgLists = (int[]) getArguments().get("seatImgLists");
         seatTipLists = (String[])getArguments().get("seatTipLists");
-
-
+        roomObjectId = (String)getArguments().get("roomObjectId");
+        floorNumber = (int)getArguments().get("floorNumber");
+        roomNumber = (int)getArguments().get("roomNumber");
+        userObjectId = (String)getArguments().get("userObjectId");
     }
 
 
@@ -104,7 +120,7 @@ public class RoomFragment extends Fragment {
 
 
 
-        seatItemList = new ArrayList<>();
+
         seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
         gridView.setAdapter(seatItemAdapter);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -120,6 +136,7 @@ public class RoomFragment extends Fragment {
 
     public ArrayList<Map<String,Object>> getSeatDateList(int[] seatImgLists,String[] seatTipLists){
         Map<String,Object> map ;
+        seatItemList = new ArrayList<>();
         for(int i=0;i<80;i++){
             map = new HashMap<>();
             map.put("image",seatImgLists[i]);
@@ -138,7 +155,21 @@ public class RoomFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
-                showDetail.setText("正在使用座位...");
+                if(checkIsSelectSeat(nowClickItem)){
+                    //更新信息
+                    updateRoom(roomObjectId,floorNumber,roomNumber);
+                    updateUser(userObjectId,floorNumber,roomNumber,nowClickItem);
+                    //更新视图
+                    seatImgLists[nowClickItem] = R.drawable.seat_selected;
+                    seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
+                    gridView.setAdapter(seatItemAdapter);
+                    //显示提示
+                    showDetail.setText("您正在使用座位：" + getSeatLocation(floorNumber,roomNumber,nowClickItem));
+                    selectedSeat = nowClickItem;
+                    nowClickItem = null;
+                    lastClickItem = null;
+                }
+
             }
         });
         dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -160,11 +191,10 @@ public class RoomFragment extends Fragment {
         dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-
-                //取消的逻辑  座位图改变
-                //balabala
-
                 dialogInterface.dismiss();
+                //取消选座，更新数据和视图
+                updateRoom(roomObjectId,floorNumber,roomNumber);
+                cancelRefreshView(selectedSeat);
                 showDetail.setText("您还未选择座位 (๑>\u0602<๑）");
             }
         });
@@ -185,18 +215,154 @@ public class RoomFragment extends Fragment {
         Log.d(TAG, "CheckSeatState: -------------------clickItem " + clickItem);
         int clickSeatImg = seatImgLists[clickItem];
         if(clickSeatImg == R.drawable.seat_noselected){
-            Toast.makeText(getContext(),"选座：" + clickItem , Toast.LENGTH_SHORT).show();
+            if(selectedSeat != null){
+                Toast.makeText(getContext(),"你已选座，请先取消座位" , Toast.LENGTH_SHORT).show();
+            }else {
+                Toast.makeText(getContext(),"选座：" + clickItem , Toast.LENGTH_SHORT).show();
+                nowClickItem = clickItem ;
+                refreshView(nowClickItem,clickSeatImg);
+            }
         }else if(clickSeatImg == R.drawable.seat_selected){
-            Toast.makeText(getContext(),"抱歉，此座已有人" , Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),"抱歉，此座已有人,请重新选择" , Toast.LENGTH_SHORT).show();
         }else if(clickSeatImg == R.drawable.seat_selcting){
             Toast.makeText(getContext(),"取消选座" , Toast.LENGTH_SHORT).show();
+            refreshView(nowClickItem,clickSeatImg);
         }
+    }
+
+    /**
+     * 点击更新视图
+     * @param nowClickItem
+     * @param clickSeatImg
+     */
+    public void refreshView(int nowClickItem,int clickSeatImg){
+        //若点击到无人的座位，则更换为有人状态
+        if(clickSeatImg == R.drawable.seat_noselected){
+            seatImgLists[nowClickItem] = R.drawable.seat_selcting;
+            //如果之前已经点击过座位，则取消上一个，选中现在的座位
+            if(lastClickItem!=null) {
+                seatImgLists[lastClickItem] = R.drawable.seat_noselected;
+            }
+            this.lastClickItem =  nowClickItem;
+            seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
+            gridView.setAdapter(seatItemAdapter);
+        }else if(clickSeatImg == R.drawable.seat_selcting){         //若点击到正在选择的座位，则更换为无人状态（取消)
+            seatImgLists[nowClickItem] = R.drawable.seat_noselected;
+            seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
+            gridView.setAdapter(seatItemAdapter);
+            this.lastClickItem = null;
+            this.nowClickItem = null;
+        }
+
+    }
+
+
+    /**
+     * 取消选座，更新视图
+     * @param selectedSeat
+     */
+    public void cancelRefreshView(int selectedSeat){
+        seatImgLists[selectedSeat] = R.drawable.seat_noselected;
+        seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
+        gridView.setAdapter(seatItemAdapter);
+        this.selectedSeat = null;
+    }
+
+
+    /**
+     * 更新书库信息
+     * @param roomObjectId
+     * @param floorNumber
+     * @param roomNumber
+     */
+    public void updateRoom(String roomObjectId,int floorNumber,int roomNumber){
+        Room room = new Room(floorNumber,roomNumber);
+        room.setRoomTypeLists(getSeatTypeLists(seatImgLists));
+        room.update(getContext(), roomObjectId, new UpdateListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "onSuccess: --------------------------更新数据成功");
+            }
+
+            @Override
+            public void onFailure(int i, String s) {
+
+            }
+        });
+    }
+
+
+    /**
+     * 将座位图片表转换为座位类型表
+     * @param seatImgLists
+     * @return
+     */
+    public Integer[] getSeatTypeLists(int[] seatImgLists){
+        Integer[] seatTypeLists = new Integer[seatImgLists.length];
+        for(int i=0;i<seatImgLists.length;i++){
+            seatTypeLists[i] = getSeatType(seatImgLists[i]);
+        }
+        return seatTypeLists;
+    }
+
+
+    /**
+     * 由座位图获得座位类型
+     * @param seatImg
+     * @return
+     */
+    public int getSeatType(int seatImg){
+        if(seatImg == R.drawable.seat_noselected){
+            return 0;
+        }else if(seatImg == R.drawable.seat_selected){
+            return 1;
+        }else {
+            return 2;
+        }
+    }
+
+
+    public void updateUser(String userObjectId,int floorNumber,int roomNumber,int nowClickSeat){
+        User user = new User();
+        user.addSeatRecords(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
+        user.update(getContext(), userObjectId, new UpdateListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "onSuccess: ---------------------更新用户成功");
+            }
+
+            @Override
+            public void onFailure(int i, String s) {
+
+            }
+        });
     }
 
 
 
 
+    /**
+     * 是否选择了座位
+     * @param nowClickSeat
+     * @return
+     */
+    public boolean checkIsSelectSeat(Integer nowClickSeat){
+        if(nowClickSeat == null){
+            return false;
+        }else {
+            return true;
+        }
+    }
 
 
-
+    /**
+     * 座位所在
+     * @param floorNumber
+     * @param roomNumber
+     * @param seatItem
+     * @return
+     */
+    public String getSeatLocation(int floorNumber,int roomNumber,int seatItem){
+        return floorNumber + "层第" + roomNumber + "书库" + (seatItem/8+1) + "排" + (seatItem%8) + "列";
+    }
 }

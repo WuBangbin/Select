@@ -29,4 +29,7 @@
 
     <string name="determine">确定选座</string>
     <string name="cancel">结束选座</string>
+
+
+    <string name="record">历史记录</string>
 </resources>

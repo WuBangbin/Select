@@ -1,6 +1,7 @@
 package com.example.a87784.select.activity;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity
     private String password;
     private String identity;
     private String cookie;
+    private String userObjectId;
 
     //点击的楼层和书库编号
     private int selectedFloor,selectedRoom;
@@ -89,14 +91,14 @@ public class MainActivity extends AppCompatActivity
     //书库编号
     private String key;
     private String roomId;
-    //传递书库编号的bundle
-    private Bundle bundle;
     //座位图表(80)
     private int[] seatImgLists;
     //座位编号信息
     private String[] seatTipLists;
     //书库fragment表
     private HashMap<String,RoomFragment> roomFragmentHashMap;
+
+
 
     private Handler handler = new Handler(){
         @Override
@@ -301,9 +303,15 @@ public class MainActivity extends AppCompatActivity
     public void switchFragment(int[] seatImgLists,String[] seatTipLists){
         RoomFragment to = matchFragment(selectedFloor,selectedRoom);
 
+        userObjectId = user.getObjectId();
+
         Bundle bundle = new Bundle();
         bundle.putSerializable("seatImgLists",seatImgLists);
         bundle.putSerializable("seatTipLists",seatTipLists);
+        bundle.putString("roomObjectId",roomId);
+        bundle.putInt("roomNumber",selectedRoom);
+        bundle.putInt("floorNumber",selectedFloor);
+        bundle.putString("userObjectId",userObjectId);
         to.setArguments(bundle);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -394,8 +402,10 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_camera) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
+        } else if (id == R.id.nav_record) {
+            Intent i = new Intent(MainActivity.this,RecordsActivity.class);
+            i.putExtra("userObjectId",userObjectId);
+            startActivity(i);
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
@@ -545,7 +555,7 @@ public class MainActivity extends AppCompatActivity
         int i=0,raw,col;
         for(raw=0;raw<10;raw++){
             for(col=0;col<8;col++){
-                seatTipLists[i] = "(" + raw + "," + col + ")";
+                seatTipLists[i] = "(" + (raw+1) + "," + (col+1) + ")";
                 i++;
             }
         }
