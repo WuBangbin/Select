@@ -7,7 +7,10 @@
         android:layout_height="0dp"
         android:id="@+id/gridSeatView"
         android:layout_weight="8"
-        android:numColumns="8"/>
+        android:numColumns="8"
+        android:layout_margin="10dp"
+        android:verticalSpacing="8dp"
+        android:horizontalSpacing="15dp"/>
     <TextView
         android:layout_width="match_parent"
         android:layout_height="0dp"

@@ -25,9 +25,12 @@ import com.example.a87784.select.config.Constans;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import cn.bmob.v3.BmobQuery;
+import cn.bmob.v3.BmobUser;
+import cn.bmob.v3.listener.FindListener;
 import cn.bmob.v3.listener.GetListener;
 import cn.bmob.v3.listener.UpdateListener;
 
@@ -77,6 +80,7 @@ public class RoomFragment extends Fragment {
 
 
 
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +92,9 @@ public class RoomFragment extends Fragment {
         floorNumber = (int)getArguments().get("floorNumber");
         roomNumber = (int)getArguments().get("roomNumber");
         userObjectId = (String)getArguments().get("userObjectId");
+
+        //设置上次选择的座位
+        setSelectedSeat();
     }
 
 
@@ -156,13 +163,13 @@ public class RoomFragment extends Fragment {
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
                 if(checkIsSelectSeat(nowClickItem)){
-                    //更新信息
-                    updateRoom(roomObjectId,floorNumber,roomNumber);
-                    updateUser(userObjectId,floorNumber,roomNumber,nowClickItem);
                     //更新视图
                     seatImgLists[nowClickItem] = R.drawable.seat_selected;
                     seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
                     gridView.setAdapter(seatItemAdapter);
+                    //更新信息
+                    updateRoom(roomObjectId,floorNumber,roomNumber);
+                    updateUser(floorNumber,roomNumber,nowClickItem);
                     //显示提示
                     showDetail.setText("您正在使用座位：" + getSeatLocation(floorNumber,roomNumber,nowClickItem));
                     selectedSeat = nowClickItem;
@@ -193,9 +200,10 @@ public class RoomFragment extends Fragment {
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
                 //取消选座，更新数据和视图
-                updateRoom(roomObjectId,floorNumber,roomNumber);
                 cancelRefreshView(selectedSeat);
+                updateRoom(roomObjectId,floorNumber,roomNumber);
                 showDetail.setText("您还未选择座位 (๑>\u0602<๑）");
+                selectedSeat = null;
             }
         });
         dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -265,27 +273,25 @@ public class RoomFragment extends Fragment {
         seatImgLists[selectedSeat] = R.drawable.seat_noselected;
         seatItemAdapter = new SimpleAdapter(getContext(),getSeatDateList(seatImgLists,seatTipLists),R.layout.seat_item , new String[]{"image","text"},new int[]{R.id.seatView,R.id.seatData});
         gridView.setAdapter(seatItemAdapter);
-        this.selectedSeat = null;
     }
 
 
+
     /**
-     * 更新书库信息
-     * @param roomObjectId
-     * @param floorNumber
-     * @param roomNumber
+     *
      */
-    public void updateRoom(String roomObjectId,int floorNumber,int roomNumber){
-        Room room = new Room(floorNumber,roomNumber);
-        room.setRoomTypeLists(getSeatTypeLists(seatImgLists));
-        room.update(getContext(), roomObjectId, new UpdateListener() {
+    public void setSelectedSeat(){
+        BmobQuery<User> query = new BmobQuery<>();
+        query.addWhereEqualTo("username",getArguments().get("studentId"));
+        query.findObjects(getContext(), new FindListener<User>() {
             @Override
-            public void onSuccess() {
-                Log.d(TAG, "onSuccess: --------------------------更新数据成功");
+            public void onSuccess(List<User> list) {
+                selectedSeat = list.get(0).getSelectSeatItem();
+                Log.d(TAG, "onSuccess: -------------------------selectedSeat = " + selectedSeat);
             }
 
             @Override
-            public void onFailure(int i, String s) {
+            public void onError(int i, String s) {
 
             }
         });
@@ -322,13 +328,47 @@ public class RoomFragment extends Fragment {
     }
 
 
-    public void updateUser(String userObjectId,int floorNumber,int roomNumber,int nowClickSeat){
+    /**
+     * 更新用户选座记录
+     * @param floorNumber
+     * @param roomNumber
+     * @param nowClickSeat
+     */
+    public void updateUser(int floorNumber,int roomNumber,int nowClickSeat){
+  //      User user = new User((String)getArguments().get("studentId"),(String)getArguments().get("password"));
         User user = new User();
         user.addSeatRecords(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
-        user.update(getContext(), userObjectId, new UpdateListener() {
+        user.setSelectSeatLocation(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
+        user.setSelectSeatItem(nowClickSeat);
+        BmobUser bmobUser = BmobUser.getCurrentUser(getContext());
+        user.update(getContext(), bmobUser.getObjectId(), new UpdateListener() {
             @Override
             public void onSuccess() {
                 Log.d(TAG, "onSuccess: ---------------------更新用户成功");
+            }
+
+            @Override
+            public void onFailure(int i, String s) {
+
+            }
+        });
+    }
+
+
+
+    /**
+     * 更新书库信息
+     * @param roomObjectId
+     * @param floorNumber
+     * @param roomNumber
+     */
+    public void updateRoom(String roomObjectId,int floorNumber,int roomNumber){
+        Room room = new Room(floorNumber,roomNumber);
+        room.setRoomTypeLists(getSeatTypeLists(seatImgLists));
+        room.update(getContext(), roomObjectId, new UpdateListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "onSuccess: --------------------------更新数据成功");
             }
 
             @Override
@@ -363,6 +403,6 @@ public class RoomFragment extends Fragment {
      * @return
      */
     public String getSeatLocation(int floorNumber,int roomNumber,int seatItem){
-        return floorNumber + "层第" + roomNumber + "书库" + (seatItem/8+1) + "排" + (seatItem%8) + "列";
+        return floorNumber + "层第" + roomNumber + "书库" + (seatItem/8+1) + "排" + (seatItem%8+1) + "列";
     }
 }

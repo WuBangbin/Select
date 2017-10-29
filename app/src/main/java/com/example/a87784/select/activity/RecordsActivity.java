@@ -20,24 +20,10 @@ import cn.bmob.v3.listener.GetListener;
 public class RecordsActivity extends AppCompatActivity {
 
 
-    private static final int GET_INFO_SUCCESS = 0;  //获得数据
 
     private ListView listView;
     private ArrayAdapter adapter;
     private ArrayList<String> records;
-
-    private Handler handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what){
-                case GET_INFO_SUCCESS:
-                    records = (ArrayList<String>) msg.obj;
-                    adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,records);
-                    listView.setAdapter(adapter);
-                    break;
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,15 +35,19 @@ public class RecordsActivity extends AppCompatActivity {
         initData(getIntent().getStringExtra("userObjectId"));
     }
 
+
+    /**
+     *
+     * @param userObjectId
+     */
     public void initData(String userObjectId){
         BmobQuery<User> query = new BmobQuery<>();
         query.getObject(this, userObjectId , new GetListener<User>() {
             @Override
             public void onSuccess(User user) {
-                Message message = handler.obtainMessage();
-                message.what = GET_INFO_SUCCESS;
-                message.obj = user.getSeatRecords();
-                handler.sendMessage(message);
+                records = user.getSeatRecords();
+                adapter = new ArrayAdapter(getApplicationContext(),android.R.layout.simple_list_item_1,records);
+                listView.setAdapter(adapter);
             }
 
             @Override

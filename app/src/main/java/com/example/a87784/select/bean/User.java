@@ -14,11 +14,13 @@ public class User extends BmobUser{
     private String major;           //学院
     private String identity;        //身份
     private String cookie;          //cookie
+    private String selectSeatLocation;      //已选择的座位位置
+    private Integer selectSeatItem;         //已选择的座位item号
 
     private ArrayList<String> seatRecords;  //历史预定座位记录
 
     public User(){
-
+        seatRecords = new ArrayList<>();
     }
 
     public User(String studentId,String password){
@@ -67,5 +69,21 @@ public class User extends BmobUser{
 
     public void addSeatRecords(String seatRecordItem) {
         seatRecords.add(seatRecordItem);
+    }
+
+    public String getSelectSeatLocation() {
+        return selectSeatLocation;
+    }
+
+    public void setSelectSeatLocation(String selectSeatLocation) {
+        this.selectSeatLocation = selectSeatLocation;
+    }
+
+    public Integer getSelectSeatItem() {
+        return selectSeatItem;
+    }
+
+    public void setSelectSeatItem(Integer selectSeatItem) {
+        this.selectSeatItem = selectSeatItem;
     }
 }

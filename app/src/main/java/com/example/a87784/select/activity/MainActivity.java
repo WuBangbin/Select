@@ -86,8 +86,6 @@ public class MainActivity extends AppCompatActivity
     private TextView noSearch,loading;
     private FrameLayout roomViewContainer;
 
-    //用户是否已注册
-    private boolean isRegistered;
     //书库编号
     private String key;
     private String roomId;
@@ -97,10 +95,13 @@ public class MainActivity extends AppCompatActivity
     private String[] seatTipLists;
     //书库fragment表
     private HashMap<String,RoomFragment> roomFragmentHashMap;
+    //切换的上一个fragment
+    private RoomFragment from;
 
 
 
-    private Handler handler = new Handler(){
+
+   /* private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
             switch(msg.what){
@@ -117,7 +118,7 @@ public class MainActivity extends AppCompatActivity
                     break;
             }
         }
-    };
+    };*/
 
 
 
@@ -145,8 +146,6 @@ public class MainActivity extends AppCompatActivity
             //查询用户是否已注册
             queryIsRegistered(studentId);
         }
-
-
     }
 
     /**
@@ -158,10 +157,12 @@ public class MainActivity extends AppCompatActivity
         user.setIdentity(identity);
         user.setName(name);
         user.setCookie(cookie);
+        Log.d(TAG, "register: -----------------------start");
         user.signUp(this, new SaveListener() {
             @Override
             public void onSuccess() {
-                Log.d(TAG, "done: -------------------注册成功");
+                Log.d(TAG, "done: -------------------注册成功   userid  " + user.getObjectId() );
+                userObjectId = user.getObjectId();
             }
 
             @Override
@@ -174,21 +175,28 @@ public class MainActivity extends AppCompatActivity
 
 
     /**
-     *查询用户是否已注册
+     * 查询用户是否已注册，未注册则注册
+     * @param studentId
      */
-    public boolean queryIsRegistered(String studentId){
-        isRegistered = false;
+    public void queryIsRegistered(String studentId){
+    //    isRegistered = false;
         BmobQuery<User> query = new BmobQuery<>();
         query.addWhereEqualTo("username",studentId);
         Log.d(TAG, "queryIsRegistered: --------------------------------1");
         query.findObjects(this, new FindListener<User>() {
             @Override
             public void onSuccess(List<User> list) {
+                //已注册
                 if(list.size() > 0){
-                    isRegistered = true;
-                    Message message = handler.obtainMessage();
-                    message.what = QUERY_USER_FINISHED;
+       //             isRegistered = true;
+                    userObjectId = list.get(0).getObjectId();
+      //              Message message = handler.obtainMessage();
+      //              message.what = QUERY_USER_FINISHED;
+                    Log.d(TAG, "onSuccess: ------------------------------userObjectId = " + userObjectId);
                     Log.d(TAG, "onSuccess: ---------------------list" + list);
+                }else {
+                    //未注册
+                    register();
                 }
             }
 
@@ -198,9 +206,7 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
-        return isRegistered;
     }
-
 
 
 
@@ -236,7 +242,7 @@ public class MainActivity extends AppCompatActivity
                 //请求点击书库的信息
                 key = String.valueOf(selectedFloor) + String.valueOf(selectedRoom);
                 roomId = matchRoomTypeId(key);
-                getRoomSeatTypeLists(roomId);
+                showFragment(roomId);
 
             }
         });
@@ -303,8 +309,6 @@ public class MainActivity extends AppCompatActivity
     public void switchFragment(int[] seatImgLists,String[] seatTipLists){
         RoomFragment to = matchFragment(selectedFloor,selectedRoom);
 
-        userObjectId = user.getObjectId();
-
         Bundle bundle = new Bundle();
         bundle.putSerializable("seatImgLists",seatImgLists);
         bundle.putSerializable("seatTipLists",seatTipLists);
@@ -312,10 +316,21 @@ public class MainActivity extends AppCompatActivity
         bundle.putInt("roomNumber",selectedRoom);
         bundle.putInt("floorNumber",selectedFloor);
         bundle.putString("userObjectId",userObjectId);
+        bundle.putString("studentId",studentId);
+        bundle.putString("password",password);
         to.setArguments(bundle);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.roomViewContainer,to).commit();
+        if(from == null){
+            fragmentTransaction.add(R.id.roomViewContainer,to).commit();
+        }else {
+            if(to.isAdded()){
+                fragmentTransaction.show(to).hide(from).commit();
+            }else {
+                fragmentTransaction.add(R.id.roomViewContainer,to).commit();
+            }
+        }
+        from = to;
     }
 
 
@@ -440,6 +455,8 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+
+
     public void setInfo(){
         View headerView = navigationView.getHeaderView(0);
         nameView = (TextView)headerView.findViewById(R.id.name);
@@ -493,19 +510,19 @@ public class MainActivity extends AppCompatActivity
 
     */
 /**
-     * 从bmob上获得座位type表
+     * 从bmob上获得座位type表后显示fragment
      * @param roomId
      */
 
-    public void getRoomSeatTypeLists(String roomId){
+    public void showFragment(String roomId){
         BmobQuery<Room> query = new BmobQuery<>();
         query.getObject(MainActivity.this, roomId, new GetListener<Room>() {
             @Override
             public void onSuccess(Room room) {
-                Message message = handler.obtainMessage();
-                message.what = GET_ROOMINFO_OK;
-                message.obj = room.getRoomTypeLists();
-                handler.sendMessage(message);
+                seatImgLists = getSeatImgLists(room.getRoomTypeLists());
+                loading.setVisibility(View.GONE);
+                roomViewContainer.setVisibility(View.VISIBLE);
+                switchFragment(seatImgLists,seatTipLists);
             }
 
             @Override
