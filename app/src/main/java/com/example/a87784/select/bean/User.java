@@ -20,13 +20,12 @@ public class User extends BmobUser{
     private ArrayList<String> seatRecords;  //历史预定座位记录
 
     public User(){
-        seatRecords = new ArrayList<>();
+
     }
 
     public User(String studentId,String password){
         super.setUsername(studentId);
         super.setPassword(password);
-        seatRecords = new ArrayList<>();
     }
 
 
@@ -85,5 +84,9 @@ public class User extends BmobUser{
 
     public void setSelectSeatItem(Integer selectSeatItem) {
         this.selectSeatItem = selectSeatItem;
+    }
+
+    public void setSeatRecords(ArrayList<String> seatRecords) {
+        this.seatRecords = seatRecords;
     }
 }

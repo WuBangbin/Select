@@ -17,6 +17,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -54,6 +55,7 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
     private EditText studentIdEdit;
     private EditText passwordEdit;
     private EditText captchaEdit;
+    private TextView loading;
 
     private String studentId;
     private String password;
@@ -242,6 +244,7 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
         captchaEdit = (EditText)findViewById(R.id.captcha);
         captchaImgView = (ImageView)findViewById(R.id.captchaImg);
         signInBtn = (Button) findViewById(R.id.sign_in_button);
+        loading = (TextView)findViewById(R.id.loading);
 
     }
 
@@ -264,6 +267,7 @@ public class LoginActivity extends AppCompatActivity implements OnClickListener 
                 studentId = studentIdEdit.getText().toString();
                 password = passwordEdit.getText().toString();
                 captcha = captchaEdit.getText().toString();
+                loading.setVisibility(View.VISIBLE);
                 if(checkInfo(studentId,password,captcha)){
                     login();
                 }

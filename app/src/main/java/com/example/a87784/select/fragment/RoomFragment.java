@@ -72,6 +72,7 @@ public class RoomFragment extends Fragment {
     private Integer lastClickItem;      //上一个点击的座位编号
     private Integer nowClickItem;       //正点击的座位编号
     private Integer selectedSeat;           //已选择的座位
+    private String selectedSeatLocation;    //已选择座位的位置
 
     //用户id
     private String userObjectId;
@@ -92,6 +93,7 @@ public class RoomFragment extends Fragment {
         floorNumber = (int)getArguments().get("floorNumber");
         roomNumber = (int)getArguments().get("roomNumber");
         userObjectId = (String)getArguments().get("userObjectId");
+        Log.d(TAG, "onCreate: ------------------------userObjectId" + userObjectId);
 
         //设置上次选择的座位
         setSelectedSeat();
@@ -276,6 +278,30 @@ public class RoomFragment extends Fragment {
     }
 
 
+    /**
+     *
+     * @param floorNumber
+     * @param roomNumber
+     * @param nowClickSeat
+     */
+    public void cancelUpdateUser(int floorNumber,int roomNumber,int nowClickSeat){
+        User user = new User((String)getArguments().get("studentId"),(String)getArguments().get("password"));
+        user.setSelectSeatLocation(null);
+        user.setSelectSeatItem(null);
+        user.update(getContext(), userObjectId, new UpdateListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "onSuccess: ---------------------更新用户成功");
+            }
+
+            @Override
+            public void onFailure(int i, String s) {
+
+            }
+        });
+    }
+
+
 
     /**
      *
@@ -287,6 +313,12 @@ public class RoomFragment extends Fragment {
             @Override
             public void onSuccess(List<User> list) {
                 selectedSeat = list.get(0).getSelectSeatItem();
+                selectedSeatLocation = list.get(0).getSelectSeatLocation();
+                if(selectedSeatLocation == null){
+                    showDetail.setText("您还未选择座位 (๑>\u0602<๑）");
+                }else {
+                    showDetail.setText("您正在使用座位：" + selectedSeatLocation);
+                }
                 Log.d(TAG, "onSuccess: -------------------------selectedSeat = " + selectedSeat);
             }
 
@@ -335,7 +367,9 @@ public class RoomFragment extends Fragment {
      * @param nowClickSeat
      */
     public void updateUser(int floorNumber,int roomNumber,int nowClickSeat){
-        User user = new User((String)getArguments().get("studentId"),(String)getArguments().get("password"));
+   //     User user = new User((String)getArguments().get("studentId"),(String)getArguments().get("password"));
+        User user = new User();
+        user.setSeatRecords(new ArrayList<String>());
   /*      User user = new User();
         user.addSeatRecords(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
         user.setSelectSeatLocation(getSeatLocation(floorNumber,roomNumber,nowClickSeat));

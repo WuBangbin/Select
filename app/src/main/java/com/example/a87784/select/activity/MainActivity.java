@@ -32,6 +32,7 @@ import com.example.a87784.select.bean.User;
 import com.example.a87784.select.config.Constans;
 import com.example.a87784.select.fragment.RoomFragment;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -157,6 +158,9 @@ public class MainActivity extends AppCompatActivity
         user.setIdentity(identity);
         user.setName(name);
         user.setCookie(cookie);
+        user.setSelectSeatItem(null);
+        user.setSelectSeatLocation(null);
+        user.setSeatRecords(new ArrayList<String>());
         Log.d(TAG, "register: -----------------------start");
         user.signUp(this, new SaveListener() {
             @Override
