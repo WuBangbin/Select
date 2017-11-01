@@ -323,12 +323,10 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         if(from == null){
             fragmentTransaction.add(R.id.roomViewContainer,to).commit();
-        }else {
-            if(to.isAdded()){
-                fragmentTransaction.show(to).hide(from).commit();
-            }else {
-                fragmentTransaction.add(R.id.roomViewContainer,to).commit();
-            }
+        }else if(to.isAdded() && from != to){
+            fragmentTransaction.show(to).hide(from).commit();
+        }else if(!(to.isAdded()) && from != to){
+                fragmentTransaction.hide(from).add(R.id.roomViewContainer,to).commit();
         }
         from = to;
     }

@@ -335,13 +335,27 @@ public class RoomFragment extends Fragment {
      * @param nowClickSeat
      */
     public void updateUser(int floorNumber,int roomNumber,int nowClickSeat){
-  //      User user = new User((String)getArguments().get("studentId"),(String)getArguments().get("password"));
-        User user = new User();
+        User user = new User((String)getArguments().get("studentId"),(String)getArguments().get("password"));
+  /*      User user = new User();
         user.addSeatRecords(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
         user.setSelectSeatLocation(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
         user.setSelectSeatItem(nowClickSeat);
         BmobUser bmobUser = BmobUser.getCurrentUser(getContext());
         user.update(getContext(), bmobUser.getObjectId(), new UpdateListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "onSuccess: ---------------------更新用户成功");
+            }
+
+            @Override
+            public void onFailure(int i, String s) {
+
+            }
+        });*/
+        user.addSeatRecords(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
+        user.setSelectSeatLocation(getSeatLocation(floorNumber,roomNumber,nowClickSeat));
+        user.setSelectSeatItem(nowClickSeat);
+        user.update(getContext(), userObjectId, new UpdateListener() {
             @Override
             public void onSuccess() {
                 Log.d(TAG, "onSuccess: ---------------------更新用户成功");
